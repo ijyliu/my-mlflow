@@ -1,0 +1,23 @@
+endpoints:
+  - name: ollama-gemma-completions
+    endpoint_type: llm/v1/completions
+    model:
+      provider: openai
+      name: gemma:latest # Or the specific Gemma model name you pulled in Ollama
+      config:
+        openai_api_base: http://localhost:3000/v1 # Ollama's OpenAI-compatible API base URL
+        openai_api_key: sk-ollama # A dummy key, as Ollama generally doesn't require one for local use
+    limit:
+      renewal_period: minute
+      calls: 1000 # Adjust as needed
+  - name: ollama-gemma-chat
+    endpoint_type: llm/v1/chat
+    model:
+      provider: openai
+      name: gemma:latest # Or the specific Gemma model name you pulled in Ollama
+      config:
+        openai_api_base: http://localhost:3000/v1
+        openai_api_key: sk-ollama
+    limit:
+      renewal_period: minute
+      calls: 1000
