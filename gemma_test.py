@@ -1,54 +1,27 @@
 import mlflow
-from openai import OpenAI
+from packaging.version import Version
 import os
 
-# Set MLflow tracking URI (optional, defaults to ./mlruns)
-# If you have a remote MLflow tracking server, set it here.
+# Connect to mlflow on localhost port 5000
 mlflow.set_tracking_uri("http://localhost:5000")
+os.environ['MLFLOW_TRACKING_USERNAME'] = 'admin'
+os.environ['MLFLOW_TRACKING_PASSWORD'] = 'password1234'
 
-# For basic authentication (if needed)
-os.environ["MLFLOW_TRACKING_USERNAME"] = "mlflow_user"
-os.environ["MLFLOW_TRACKING_PASSWORD"] = "mlflow"
-
-# Set an experiment name
-mlflow.set_experiment("Ollama_Gemma_Experiments")
-
-# Enable auto-tracing for OpenAI
-mlflow.openai.autolog()
-
-# Load gemini api key from credentials/gemini-api-key.txt
-gemini_api_key_path = "credentials/gemini-api-key.txt"
-with open(gemini_api_key_path, "r") as f:
-    gemini_api_key = f.read().strip()
-
-# Configure the OpenAI client to point to your Ollama endpoint
-client = OpenAI(
-    base_url="http://localhost:3000/v1",  # Or your custom port, e.g., "http://localhost:3000/v1"
-    api_key='test',  # Use the loaded Gemini API key
+assert Version(mlflow.__version__) >= Version("2.18.0"), (
+  "This feature requires MLflow version 2.18.0 or newer. "
+  "Please run '%pip install -U mlflow' in a notebook cell, "
+  "and restart the kernel when the command finishes."
 )
 
-# Now make your LLM calls using the OpenAI client
-try:
-    print("Making a completion request...")
-    response = client.completions.create(
-        model="gemma3-1b",  # Or "gemma:latest", "gemma:2b", etc. depending on your pulled model
-        prompt="What is the capital of France?",
-        max_tokens=50
-    )
-    print("Completion Response:", response.choices[0].text)
+import google.genai as genai
 
-    print("\nMaking a chat completion request...")
-    chat_response = client.chat.completions.create(
-        model="gemma3-1b",
-        messages=[
-            {"role": "system", "content": "You are a helpful AI assistant."},
-            {"role": "user", "content": "Tell me a fun fact about cats."}
-        ],
-        max_tokens=50
-    )
-    print("Chat Response:", chat_response.choices[0].message.content)
+mlflow.gemini.autolog()
 
-except Exception as e:
-    print(f"An error occurred: {e}")
+# Replace "GEMINI_API_KEY" with your API key
+# Load from credentials/gemini-api-key.txt
+with open("credentials/gemini-api-key.txt", "r") as f:
+    api_key = f.read().strip()
+client = genai.Client(api_key=api_key)
 
-print("\nMLflow runs should now be visible in the MLflow UI.")
+# Inputs and outputs of the API request will be logged in a trace
+client.models.generate_content(model="gemini-1.5-flash", contents="Hello!")
